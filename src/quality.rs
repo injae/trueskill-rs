@@ -59,20 +59,21 @@ pub fn quality(rating_groups: &[Vec<Rating<f64>>], weights: Option<Vec<Vec<f64>>
         .collect_vec();
     let len = flatten_ratings.len();
 
-    let mean_matrix = DMatrix::from_column_slice(len, 1, &rating_groups.iter()
-                                                 .flatten()
+    let mean_matrix = DMatrix::from_column_slice(len, 1, 
+                                                 &flatten_ratings
+                                                 .iter()
                                                  .map(|r| r.mu())
                                                  .collect_vec()
     );
     let var_matrix = DMatrix::from_partial_diagonal(len, len,
-                                                    &rating_groups.iter()
-                                                    .flatten()
-                                                    .map(|it| it.sigma().powi(2) )
+                                                    &flatten_ratings
+                                                    .iter()
+                                                    .map(|r| r.sigma().powi(2) )
                                                     .collect_vec()
     );
     let rotated_a_matrix = rotate_a_matrix(&rating_groups, &flatten_weights);
     let a_matrix = rotated_a_matrix.transpose();
-    let ata = beta.exp2() * &rotated_a_matrix * &a_matrix;
+    let ata = beta.powi(2) * &rotated_a_matrix * &a_matrix;
     let atsa = &rotated_a_matrix * &var_matrix * &a_matrix;
     let start = mean_matrix.transpose() * &a_matrix;
     let middle = ata.clone() + atsa;
